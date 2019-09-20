@@ -1,5 +1,6 @@
 package edu.cnm.deepdive.craps.model;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -39,26 +40,31 @@ public class Game {
 
   }
 
-  public State play(int rounds){
+  public List<State> play(int rounds){
+    List<State> score = new LinkedList<>();
 
-    State state = State.initial();
-    int point = 0;
-    Roll roll;
+    for (int i = 0; i < rounds; i++) {
+      State state = State.initial();
+      int point = 0;
+      Roll roll;
 
-    do {
-      roll = new Roll(rng);
-      state = state.next(point,roll);
-      if (state == State.POINT){
-        point = roll.getValue();
+      do {
+        roll = new Roll(rng);
+        state = state.next(point,roll);
+        if (state == State.POINT){
+          point = roll.getValue();
+        }
+
+      }while (!(state == State.WIN || state == State.LOSS));
+      if (state==State.WIN){
+        tally.win();
+      } else {
+        tally.loss();
       }
-
-    }while (!(state == State.WIN || state == State.LOSS));
-    if (state==State.WIN){
-      tally.win();
-    } else {
-      tally.loss();
+      score.add(state);
     }
-    return state;
+
+    return score;
   }
 
   public void reset() {
@@ -177,7 +183,7 @@ public class Game {
 
     @Override
     public String toString() {
-      return "Roll{" + die1 + "," + die2 +", Value="+ getValue() + "}";
+      return "Roll(" + Arrays.toString(getDice()) +", Value="+ getValue() + ")";
     }
   }
 
@@ -187,32 +193,32 @@ public class Game {
     private int losses;
 
 
-    public void reset(){
+    private void reset(){
       wins = 0;
       losses = 0;
     }
 
-    public int getWins() {
+    private int getWins() {
       return wins;
     }
 
-    public int getLosses() {
+    private int getLosses() {
       return losses;
     }
 
-    public int getPlays(){
+    private int getPlays(){
       return wins + losses;
     }
 
 
-    public void win(){
+    private void win(){
       wins++;
     }
-    public void loss(){
+    private void loss(){
       losses++;
     }
 
-    public double getPercentage(){
+    private double getPercentage(){
       return getPlays() > 0 ? ((double) wins) / getPlays() : 0;
     }
   }
