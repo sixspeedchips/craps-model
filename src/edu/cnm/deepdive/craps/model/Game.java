@@ -1,5 +1,8 @@
 package edu.cnm.deepdive.craps.model;
 
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Random;
 
 public class Game {
@@ -12,12 +15,38 @@ public class Game {
     this.tally = new Tally();
   }
 
-  public State play(){
+  public Round play(){
+
     State state = State.initial();
     int point = 0;
+    List<Roll> rolls = new LinkedList<>();
+    Roll roll;
+    do {
+      roll = new Roll(rng);
+      rolls.add(roll);
+      state = state.next(point,roll);
+      if (state == State.POINT){
+        point = roll.getValue();
+      }
+
+    }while (!(state == State.WIN || state == State.LOSS));
+    if (state==State.WIN){
+      tally.win();
+    } else {
+      tally.loss();
+    }
+    return new Round(state, rolls);
+
+  }
+
+  public State play(int rounds){
+
+    State state = State.initial();
+    int point = 0;
+    Roll roll;
 
     do {
-      Roll roll = new Roll(rng);
+      roll = new Roll(rng);
       state = state.next(point,roll);
       if (state == State.POINT){
         point = roll.getValue();
@@ -114,7 +143,6 @@ public class Game {
     }
   }
 
-
   public static class Roll {
 
     private final int die1;
@@ -134,10 +162,6 @@ public class Game {
     }
 
 
-//    static Roll newRoll(){
-//      return new Roll();
-//    }
-
     public int getDie2() {
       return die2;
     }
@@ -151,11 +175,13 @@ public class Game {
       return die1+die2;
     }
 
-
-
+    @Override
+    public String toString() {
+      return "Roll{" + die1 + "," + die2 +", Value="+ getValue() + "}";
+    }
   }
 
-  static class Tally {
+  private static class Tally {
 
     private int wins;
     private int losses;
@@ -188,6 +214,35 @@ public class Game {
 
     public double getPercentage(){
       return getPlays() > 0 ? ((double) wins) / getPlays() : 0;
+    }
+  }
+
+  public static class Round{
+
+    private final State state;
+    private final List<Roll> rolls;
+
+    private Round(State state, List<Roll> rolls) {
+
+      this.state = state;
+      this.rolls = Collections.unmodifiableList(rolls);
+
+    }
+
+    public State getState() {
+      return state;
+    }
+
+    public List<Roll> getRolls() {
+      return rolls;
+    }
+
+    @Override
+    public String toString() {
+      return "Round{" +
+          "state=" + state +
+          ", rolls=" + rolls +
+          '}';
     }
   }
 }
